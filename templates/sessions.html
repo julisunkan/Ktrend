@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Research Sessions - KDP Keyword Research Tool{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history me-2"></i>Research Sessions</h2>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Search
+                </a>
+            </div>
+            
+            {% if sessions %}
+                <div class="row">
+                    {% for session in sessions %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-truncate">{{ session.name }}</h6>
+                                <small class="text-muted">{{ session.created_at.strftime('%m/%d/%Y') }}</small>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        Created: {{ session.created_at.strftime('%Y-%m-%d %H:%M') }}<br>
+                                        {% if session.updated_at != session.created_at %}
+                                        Updated: {{ session.updated_at.strftime('%Y-%m-%d %H:%M') }}<br>
+                                        {% endif %}
+                                        <span class="badge bg-secondary">
+                                            {{ session.data | length if session.data else 0 }} keywords analyzed
+                                        </span>
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100">
+                                    <a href="{{ url_for('load_session', session_id=session.id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-folder-open me-1"></i>Load
+                                    </a>
+                                    <button class="btn btn-outline-secondary btn-sm" 
+                                            onclick="viewSessionDetails({{ session.id }})">
+                                        <i class="fas fa-eye me-1"></i>Preview
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteSession({{ session.id }}, '{{ session.name }}')">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Research Sessions Found</h4>
+                    <p class="text-muted">Your keyword research sessions will appear here after you run searches.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Your First Search
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Session Details Modal -->
+<div class="modal fade" id="sessionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Session Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="sessionDetailsContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="loadSessionFromModal">Load Session</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentSessionId = null;
+
+function viewSessionDetails(sessionId) {
+    currentSessionId = sessionId;
+    
+    // Find the session data from the page
+    const sessionCard = document.querySelector(`[onclick="viewSessionDetails(${sessionId})"]`).closest('.card');
+    const sessionName = sessionCard.querySelector('.card-header h6').textContent;
+    const sessionDate = sessionCard.querySelector('.card-header small').textContent;
+    
+    // Populate modal
+    const modal = new bootstrap.Modal(document.getElementById('sessionDetailsModal'));
+    const content = document.getElementById('sessionDetailsContent');
+    
+    content.innerHTML = `
+        <div class="mb-3">
+            <h6>Session Information</h6>
+            <p><strong>Name:</strong> ${sessionName}</p>
+            <p><strong>Date:</strong> ${sessionDate}</p>
+        </div>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Load this session to view the complete keyword analysis results.
+        </div>
+    `;
+    
+    // Setup load button
+    document.getElementById('loadSessionFromModal').onclick = () => {
+        window.location.href = `/session/${sessionId}`;
+    };
+    
+    modal.show();
+}
+
+function deleteSession(sessionId, sessionName) {
+    if (!confirm(`Are you sure you want to delete the session "${sessionName}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    // Since we don't have a delete endpoint in the current routes, 
+    // we'll show a message for now
+    alert('Session deletion feature will be available in a future update.');
+    
+    // In a full implementation, this would make an API call to delete the session
+    // fetch(`/session/${sessionId}/delete`, { method: 'DELETE' })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.success) {
+    //             location.reload();
+    //         } else {
+    //             alert('Failed to delete session: ' + data.error);
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Delete error:', error);
+    //         alert('Failed to delete session. Please try again.');
+    //     });
+}
+</script>
+{% endblock %}
