@@ -14,30 +14,61 @@ class KDPApp {
         this.initClipboard();
     }
 
-    // Theme Management
+    // Enhanced Theme Management
     initTheme() {
         // Set initial theme
         document.documentElement.setAttribute('data-bs-theme', this.currentTheme);
+        document.body.setAttribute('data-bs-theme', this.currentTheme);
         this.updateThemeIcon();
+        this.updateChartTheme();
 
-        // Bind theme toggle
+        // Bind theme toggle with animation
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.toggleTheme());
+            themeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleTheme();
+            });
         }
     }
 
     toggleTheme() {
+        // Add smooth transition
+        document.body.style.transition = 'all 0.3s ease';
+        
         this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', this.currentTheme);
+        document.body.setAttribute('data-bs-theme', this.currentTheme);
         localStorage.setItem('theme', this.currentTheme);
+        
         this.updateThemeIcon();
+        this.updateChartTheme();
+        
+        // Remove transition after animation
+        setTimeout(() => {
+            document.body.style.transition = '';
+        }, 300);
     }
 
     updateThemeIcon() {
         const themeIcon = document.getElementById('themeIcon');
         if (themeIcon) {
-            themeIcon.className = this.currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            // Add rotation animation
+            themeIcon.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                themeIcon.className = this.currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                themeIcon.style.transform = 'rotate(0deg)';
+            }, 150);
+        }
+    }
+
+    updateChartTheme() {
+        // Update Chart.js theme
+        const isDark = this.currentTheme === 'dark';
+        if (typeof Chart !== 'undefined') {
+            Chart.defaults.color = isDark ? '#ffffff' : '#333333';
+            Chart.defaults.borderColor = isDark ? '#374151' : '#e5e7eb';
+            Chart.defaults.backgroundColor = isDark ? '#1f2937' : '#f9fafb';
         }
     }
 
